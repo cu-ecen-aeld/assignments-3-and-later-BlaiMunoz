@@ -2,7 +2,7 @@
 
 # Check if the number of arguments is correct
 if [ "$#" -ne 2 ]; then
-  echo "Error: Incorrect number of arguments. Usage: $0 <filesdir> <searchstr>"
+  echo " Error: Incorrect number of arguments. Usage: $0 <filesdir> <searchstr>"
   exit 1
 fi
 
@@ -11,13 +11,13 @@ searchstr=$2
 
 # Check if filesdir and searchstr are not empty
 if [ -z "$filesdir" ] || [ -z "$searchstr" ]; then
-  echo "Error: filesdir or searchstr argument not specified."
+  echo " Error: filesdir or searchstr argument not specified."
   exit 1
 fi
 
 # Check if filesdir is a valid directory
 if ! [ -d "$filesdir" ]; then
-  echo "Error: filesdir does not represent a directory on the filesystem."
+  echo " Error: filesdir does not represent a directory on the filesystem."
   exit 1
 fi
 
