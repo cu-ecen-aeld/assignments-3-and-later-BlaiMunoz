@@ -1,5 +1,13 @@
 #include "systemcalls.h"
 
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <stdarg.h>
+
 /**
  * @param cmd the command to execute with system()
  * @return true if the command in @param cmd was executed
@@ -9,15 +17,15 @@
 */
 bool do_system(const char *cmd)
 {
-
-/*
- * TODO  add your code here
- *  Call the system() function with the command set in the cmd
- *   and return a boolean true if the system() call completed with success
- *   or false() if it returned a failure
-*/
-
-    return true;
+    int status = system(cmd);
+    if (status == -1) {
+        printf("Failed to execute system command.\n");
+        return false;  // Return false if system() call failed
+    }
+    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+        return true;  // Return true if system() call completed successfully
+    }
+    return false;  // Return false if system() call completed with an error
 }
 
 /**
@@ -45,23 +53,25 @@ bool do_exec(int count, ...)
         command[i] = va_arg(args, char *);
     }
     command[count] = NULL;
-    // this line is to avoid a compile warning before your implementation is complete
-    // and may be removed
-    command[count] = command[count];
 
-/*
- * TODO:
- *   Execute a system command by calling fork, execv(),
- *   and wait instead of system (see LSP page 161).
- *   Use the command[0] as the full path to the command to execute
- *   (first argument to execv), and use the remaining arguments
- *   as second argument to the execv() command.
- *
-*/
+    pid_t pid = fork();
 
-    va_end(args);
-
-    return true;
+    if (pid == -1) {
+        perror("fork failed");
+        return false;
+    } else if (pid == 0) {  // child process
+        execv(command[0], command);
+        perror("execv failed");  // only returns if execv fails
+        exit(EXIT_FAILURE);
+    } else {  // parent process
+        int status;
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
 
 /**
@@ -92,6 +102,50 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
+
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        perror("fork");
+        return false;
+    }
+
+    if (pid == 0) {
+        // Child process
+        // Open the output file for writing
+        FILE* outFile = fopen(outputfile, "w");
+        if (outFile == NULL) {
+            perror("fopen");
+            exit(EXIT_FAILURE);
+        }
+
+        // Redirect stdout to the output file
+        if (dup2(fileno(outFile), STDOUT_FILENO) == -1) {
+            perror("dup2");
+            exit(EXIT_FAILURE);
+        }
+
+        // Execute the command
+        if (execv(command[0], command) == -1) {
+            perror("execv");
+            exit(EXIT_FAILURE);
+        }
+
+        // Close the output file
+        fclose(outFile);
+    } else {
+        // Parent process
+        int status;
+        if (wait(&status) == -1) {
+            perror("wait");
+            return false;
+        }
+        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     va_end(args);
 
