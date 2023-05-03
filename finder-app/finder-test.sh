@@ -29,10 +29,11 @@ MATCHSTR="The number of files are ${NUMFILES} and the number of matching lines a
 
 echo "Writing ${NUMFILES} files containing string ${WRITESTR} to ${WRITEDIR}"
 
-rm -rf "${WRITEDIR}"
+sudo rm -rf "${WRITEDIR}"
 
 # create $WRITEDIR if not assignment1
 assignment=`cat ../conf/assignment.txt`
+echo ${assignment}
 
 if [ $assignment != 'assignment1' ]
 then
@@ -49,17 +50,17 @@ then
 	fi
 fi
 
-# for i in $( seq 1 $NUMFILES)
-# do
-# 	make clean
-# 	make
-# 	./writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
-# done
+for i in $( seq 1 $NUMFILES)
+do
+	sudo make clean
+	sudo make all
+	./writer "$WRITEDIR/${username}$i.txt" "$WRITESTR"
+done
 
 OUTPUTSTRING=$(./finder.sh "$WRITEDIR" "$WRITESTR")
 
 # remove temporary directories
-rm -rf /tmp/aeld-data
+sudo rm -rf /tmp/aeld-data
 
 set +e
 echo ${OUTPUTSTRING} | grep "${MATCHSTR}"
@@ -67,6 +68,6 @@ if [ $? -eq 0 ]; then
 	echo "success"
 	exit 0
 else
-	echo "failed: expected  ${MATCHSTR} in ${OUTPUTSTRING} but instead found"
+	echo "failed: expected  ${MATCHSTR} in ${OUTPUTSTRING} but instead found" $?
 	exit 1
 fi
