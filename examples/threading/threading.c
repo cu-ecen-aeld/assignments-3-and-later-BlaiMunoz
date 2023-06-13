@@ -8,26 +8,50 @@
 //#define DEBUG_LOG(msg,...) printf("threading: " msg "\n" , ##__VA_ARGS__)
 #define ERROR_LOG(msg,...) printf("threading ERROR: " msg "\n" , ##__VA_ARGS__)
 
-void* threadfunc(void* thread_param)
-{
+typedef struct {
+    pthread_mutex_t* mutex;
+    int wait_to_obtain_ms;
+    int wait_to_release_ms;
+} thread_data_t;
 
-    // TODO: wait, obtain mutex, wait, release mutex as described by thread_data structure
-    // hint: use a cast like the one below to obtain thread arguments from your parameter
-    //struct thread_data* thread_func_args = (struct thread_data *) thread_param;
+void* threadfunc(void* thread_param) {
+    thread_data_t* thread_data = (thread_data_t*)thread_param;
+
+    // Wait for wait_to_obtain_ms milliseconds
+    usleep(thread_data->wait_to_obtain_ms * 1000);
+
+    // Obtain the mutex
+    pthread_mutex_lock(thread_data->mutex);
+    printf("Thread obtained mutex\n");
+
+    // Wait for wait_to_release_ms milliseconds
+    usleep(thread_data->wait_to_release_ms * 1000);
+
+    // Release the mutex
+    pthread_mutex_unlock(thread_data->mutex);
+    printf("Thread released mutex\n");
+
     return thread_param;
 }
 
-
-bool start_thread_obtaining_mutex(pthread_t *thread, pthread_mutex_t *mutex,int wait_to_obtain_ms, int wait_to_release_ms)
+bool start_thread_obtaining_mutex(pthread_t *thread, pthread_mutex_t *mutex, int wait_to_obtain_ms, int wait_to_release_ms)
 {
-    /**
-     * TODO: allocate memory for thread_data, setup mutex and wait arguments, pass thread_data to created thread
-     * using threadfunc() as entry point.
-     *
-     * return true if successful.
-     *
-     * See implementation details in threading.h file comment block
-     */
-    return false;
-}
+    // Allocate memory for thread_data
+    thread_data_t* thread_data = (thread_data_t*)malloc(sizeof(thread_data_t));
+    if (thread_data == NULL) {
+        return false; // Memory allocation failed
+    }
 
+    // Set up mutex and wait arguments
+    thread_data->mutex = mutex;
+    thread_data->wait_to_obtain_ms = wait_to_obtain_ms;
+    thread_data->wait_to_release_ms = wait_to_release_ms;
+
+    // Create the thread
+    if (pthread_create(thread, NULL, threadfunc, thread_data) != 0) {
+        free(thread_data);
+        return false; // Thread creation failed
+    }
+
+    return true;
+}
