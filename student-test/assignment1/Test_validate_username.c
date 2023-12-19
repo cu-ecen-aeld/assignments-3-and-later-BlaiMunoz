@@ -21,5 +21,5 @@ void test_validate_my_username()
     char* conf_file_username = malloc_username_from_conf_file();
 
     // Use unity assertion TEST_ASSERT_EQUAL_STRING_MESSAGE to verify the two strings are equal.
-    ASSERT_STREQ(hardcoded_username, conf_file_username) << "The usernames are not equal.";
+    ASSERT_STREQ(hardcoded_username, conf_file_username);
 }
