@@ -15,11 +15,11 @@
 void test_validate_my_username()
 {
     // Call the my_username() function in autotest-validate.c to get your hard coded username.
-    char* hardcoded_username = my_username();
+    const char* hardcoded_username = my_username();
 
     // Obtain the value returned from function malloc_username_from_conf_file() in username-from-conf-file.h
     char* conf_file_username = malloc_username_from_conf_file();
 
     // Use unity assertion TEST_ASSERT_EQUAL_STRING_MESSAGE to verify the two strings are equal.
-    ASSERT_STREQ(hardcoded_username, conf_file_username);
+    TEST_ASSERT_EQUAL_STRING_MESSAGE(hardcoded_username, conf_file_username, "Nice work!");
 }
